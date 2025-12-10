@@ -1,0 +1,4 @@
+*.d
+*.o
+lox
+program.lox
