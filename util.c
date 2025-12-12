@@ -31,3 +31,13 @@ char *substring(const char *source, size_t start_index, size_t end_index)
 
     return buffer;
 }
+
+int imin(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+int imax(int a, int b)
+{
+    return a > b ? a : b;
+}

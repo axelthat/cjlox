@@ -1,0 +1,89 @@
+#include "token_type.h"
+#include <stdlib.h>
+
+char *token_type_get_name(enum TokenType *token_type)
+{
+    switch (*token_type)
+    {
+    case TOKEN_TYPE_LEFT_PAREN:
+        return "LEFT_PAREN";
+    case TOKEN_TYPE_RIGHT_PAREN:
+        return "RIGHT_PAREN";
+    case TOKEN_TYPE_LEFT_BRACE:
+        return "LEFT_BRACE";
+    case TOKEN_TYPE_RIGHT_BRACE:
+        return "RIGHT_BRACE";
+    case TOKEN_TYPE_COMMA:
+        return "COMMA";
+    case TOKEN_TYPE_DOT:
+        return "DOT";
+    case TOKEN_TYPE_MINUS:
+        return "MINUS";
+    case TOKEN_TYPE_PLUS:
+        return "PLUS";
+    case TOKEN_TYPE_SEMICOLON:
+        return "SEMICOLON";
+    case TOKEN_TYPE_SLASH:
+        return "SLASH";
+    case TOKEN_TYPE_STAR:
+        return "STAR";
+    case TOKEN_TYPE_BANG:
+        return "BANG";
+    case TOKEN_TYPE_BANG_EQUAL:
+        return "BANG_EQUAL";
+    case TOKEN_TYPE_EQUAL:
+        return "EQUAL";
+    case TOKEN_TYPE_EQUAL_EQUAL:
+        return "EQUAL_EQUAL";
+    case TOKEN_TYPE_GREATER:
+        return "GREATER";
+    case TOKEN_TYPE_GREATER_EQUAL:
+        return "GREATER_EQUAL";
+    case TOKEN_TYPE_LESS:
+        return "LESS";
+    case TOKEN_TYPE_LESS_EQUAL:
+        return "LESS_EQUAL";
+    case TOKEN_TYPE_IDENTIFIER:
+        return "IDENTIFIER";
+    case TOKEN_TYPE_STRING:
+        return "STRING";
+    case TOKEN_TYPE_NUMBER:
+        return "NUMBER";
+    case TOKEN_TYPE_AND:
+        return "AND";
+    case TOKEN_TYPE_CLASS:
+        return "CLASS";
+    case TOKEN_TYPE_ELSE:
+        return "ELSE";
+    case TOKEN_TYPE_FALSE:
+        return "FALSE";
+    case TOKEN_TYPE_FUN:
+        return "FUN";
+    case TOKEN_TYPE_FOR:
+        return "FOR";
+    case TOKEN_TYPE_IF:
+        return "IF";
+    case TOKEN_TYPE_NIL:
+        return "NIL";
+    case TOKEN_TYPE_OR:
+        return "OR";
+    case TOKEN_TYPE_PRINT:
+        return "PRINT";
+    case TOKEN_TYPE_RETURN:
+        return "RETURN";
+    case TOKEN_TYPE_SUPER:
+        return "SUPER";
+    case TOKEN_TYPE_THIS:
+        return "THIS";
+    case TOKEN_TYPE_TRUE:
+        return "TRUE";
+    case TOKEN_TYPE_VAR:
+        return "VAR";
+    case TOKEN_TYPE_WHILE:
+        return "WHILE";
+    case TOKEN_TYPE_EOF:
+        return "EOF";
+    default:
+        return NULL;
+    }
+}
