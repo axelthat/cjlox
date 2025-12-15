@@ -5,7 +5,7 @@
 #include "util.h"
 #include "token.h"
 
-static void scanner_read_token(Scanner *scanner);
+static void scanner_get_token(Scanner *scanner);
 static void scanner_add_token(Scanner *scanner, enum TokenType token_type, LiteralType literal_type, Literal literal);
 static char scanner_peek(Scanner *scanner);
 static char scanner_peek_next(Scanner *scanner);
@@ -29,18 +29,18 @@ void scanner_init(Scanner *scanner)
     scanner->line = 1;
 }
 
-void scanner_read_tokens(Scanner *scanner)
+void scanner_tokens(Scanner *scanner)
 {
     while (!scanner_is_at_end(scanner))
     {
-        scanner_read_token(scanner);
+        scanner_get_token(scanner);
         scanner->start = scanner->current;
     }
 
     scanner_add_token(scanner, TOKEN_TYPE_EOF, LITERAL_NONE, (Literal){0});
 }
 
-static void scanner_read_token(Scanner *scanner)
+static void scanner_get_token(Scanner *scanner)
 {
     char c = scanner_advance(scanner);
 
@@ -126,7 +126,7 @@ static void scanner_add_token(Scanner *scanner, enum TokenType token_type, Liter
         .lexeme = substring(scanner->source, scanner->start, scanner->current),
         .literal = literal,
         .literal_type = literal_type,
-        .token_type = token_type,
+        .type = token_type,
     };
 }
 

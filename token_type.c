@@ -1,48 +1,51 @@
 #include "token_type.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 char *token_type_get_name(enum TokenType *token_type)
 {
+    // printf("%d\n", *token_type);
+
     switch (*token_type)
     {
     case TOKEN_TYPE_LEFT_PAREN:
-        return "LEFT_PAREN";
+        return "(";
     case TOKEN_TYPE_RIGHT_PAREN:
-        return "RIGHT_PAREN";
+        return ")";
     case TOKEN_TYPE_LEFT_BRACE:
-        return "LEFT_BRACE";
+        return "{";
     case TOKEN_TYPE_RIGHT_BRACE:
-        return "RIGHT_BRACE";
+        return "}";
     case TOKEN_TYPE_COMMA:
-        return "COMMA";
+        return ",";
     case TOKEN_TYPE_DOT:
-        return "DOT";
+        return ".";
     case TOKEN_TYPE_MINUS:
-        return "MINUS";
+        return "-";
     case TOKEN_TYPE_PLUS:
-        return "PLUS";
+        return "+";
     case TOKEN_TYPE_SEMICOLON:
-        return "SEMICOLON";
+        return ";";
     case TOKEN_TYPE_SLASH:
-        return "SLASH";
+        return "/";
     case TOKEN_TYPE_STAR:
-        return "STAR";
+        return "*";
     case TOKEN_TYPE_BANG:
-        return "BANG";
+        return "!";
     case TOKEN_TYPE_BANG_EQUAL:
-        return "BANG_EQUAL";
+        return "!=";
     case TOKEN_TYPE_EQUAL:
-        return "EQUAL";
+        return "=";
     case TOKEN_TYPE_EQUAL_EQUAL:
-        return "EQUAL_EQUAL";
+        return "==";
     case TOKEN_TYPE_GREATER:
-        return "GREATER";
+        return ">";
     case TOKEN_TYPE_GREATER_EQUAL:
-        return "GREATER_EQUAL";
+        return ">=";
     case TOKEN_TYPE_LESS:
-        return "LESS";
+        return "<";
     case TOKEN_TYPE_LESS_EQUAL:
-        return "LESS_EQUAL";
+        return "<=";
     case TOKEN_TYPE_IDENTIFIER:
         return "IDENTIFIER";
     case TOKEN_TYPE_STRING:
@@ -50,35 +53,35 @@ char *token_type_get_name(enum TokenType *token_type)
     case TOKEN_TYPE_NUMBER:
         return "NUMBER";
     case TOKEN_TYPE_AND:
-        return "AND";
+        return "&&";
     case TOKEN_TYPE_CLASS:
         return "CLASS";
     case TOKEN_TYPE_ELSE:
-        return "ELSE";
+        return "else";
     case TOKEN_TYPE_FALSE:
-        return "FALSE";
+        return "false";
     case TOKEN_TYPE_FUN:
         return "FUN";
     case TOKEN_TYPE_FOR:
-        return "FOR";
+        return "for";
     case TOKEN_TYPE_IF:
-        return "IF";
+        return "if";
     case TOKEN_TYPE_NIL:
-        return "NIL";
+        return "nil";
     case TOKEN_TYPE_OR:
-        return "OR";
+        return "||";
     case TOKEN_TYPE_PRINT:
-        return "PRINT";
+        return "print";
     case TOKEN_TYPE_RETURN:
-        return "RETURN";
+        return "return";
     case TOKEN_TYPE_SUPER:
         return "SUPER";
     case TOKEN_TYPE_THIS:
-        return "THIS";
+        return "this";
     case TOKEN_TYPE_TRUE:
-        return "TRUE";
+        return "true";
     case TOKEN_TYPE_VAR:
-        return "VAR";
+        return "var";
     case TOKEN_TYPE_WHILE:
         return "WHILE";
     case TOKEN_TYPE_EOF:

@@ -15,7 +15,7 @@ void token_free(Token *token)
     }
 }
 
-void token_to_string(Token *token)
+void token_print_string(Token *token)
 {
     char *text = "";
     char str_buffer[32];
@@ -36,5 +36,5 @@ void token_to_string(Token *token)
         break;
     }
 
-    fprintf(stdout, "%s %s %s\n", token_type_get_name(&token->token_type), token->lexeme, text);
+    fprintf(stdout, "%s %s %s\n", token_type_get_name(&token->type), token->lexeme, text);
 }

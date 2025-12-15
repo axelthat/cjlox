@@ -21,13 +21,13 @@ typedef union
 
 typedef struct
 {
-    enum TokenType token_type;
+    enum TokenType type;
     char *lexeme;
     LiteralType literal_type;
     Literal literal;
 } Token;
 
 void token_free(Token *token);
-void token_to_string(Token *token);
+void token_print_string(Token *token);
 
 #endif

@@ -19,6 +19,6 @@ typedef struct
 } Scanner;
 
 void scanner_init(Scanner *scanner);
-void scanner_read_tokens(Scanner *scanner);
+void scanner_tokens(Scanner *scanner);
 
 #endif
