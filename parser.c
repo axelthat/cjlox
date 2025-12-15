@@ -99,10 +99,6 @@ static Expr *parser_or(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_and(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -114,6 +110,11 @@ static Expr *parser_or(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
@@ -132,11 +133,6 @@ static Expr *parser_and(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_equality(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
-
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -148,6 +144,11 @@ static Expr *parser_and(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
@@ -166,10 +167,6 @@ static Expr *parser_equality(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_comparison(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -181,6 +178,11 @@ static Expr *parser_equality(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
@@ -199,10 +201,6 @@ static Expr *parser_comparison(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_term(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -214,6 +212,11 @@ static Expr *parser_comparison(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
@@ -232,10 +235,6 @@ static Expr *parser_term(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_factor(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -247,6 +246,11 @@ static Expr *parser_term(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
@@ -265,10 +269,6 @@ static Expr *parser_factor(Parser *parser)
         Token *operator = parser_previous(parser);
 
         Expr *right_expr = parser_unary(parser);
-        if (parser->had_error)
-        {
-            return right_expr;
-        }
         Expr *left_expr = expr;
 
         expr = malloc(sizeof(Expr));
@@ -280,6 +280,11 @@ static Expr *parser_factor(Parser *parser)
                 .right = right_expr,
             },
         };
+
+        if (parser->had_error)
+        {
+            return expr;
+        }
     }
 
     return expr;
