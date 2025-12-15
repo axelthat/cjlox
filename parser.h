@@ -13,6 +13,6 @@ typedef struct
 } Parser;
 
 void parser_init(Parser *parser);
-Expr parser_parse(Parser *parser);
+Expr *parser_parse(Parser *parser);
 
 #endif

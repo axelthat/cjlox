@@ -3,42 +3,34 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static Expr *expr_get_expr(Expr *expr)
+void expr_free(Expr *expr)
 {
     if (expr == NULL)
     {
-        return NULL;
+        return;
     }
 
     switch (expr->type)
     {
     case EXPR_TYPE_GROUPING:
-        return expr->as.grouping.expr;
+        expr_free(expr->as.grouping.expr);
+        break;
     case EXPR_TYPE_UNARY:
-        return expr->as.unary.expr;
+        expr_free(expr->as.unary.expr);
+        break;
+    case EXPR_TYPE_BINARY:
+        expr_free(expr->as.binary.left);
+        expr_free(expr->as.binary.right);
+        break;
+    case EXPR_TYPE_LOGICAL:
+        expr_free(expr->as.logical.left);
+        expr_free(expr->as.logical.right);
+        break;
     default:
-        return NULL;
+        break;
     }
-}
 
-void expr_free(Expr *expr)
-{
-    switch (expr->type)
-    {
-    case EXPR_TYPE_GROUPING:
-    case EXPR_TYPE_UNARY:
-    {
-        Expr *expr_ptr = expr_get_expr(expr);
-        if (expr_ptr != NULL)
-        {
-            expr_free(expr_ptr);
-            free(expr_ptr);
-        }
-        break;
-    }
-    default:
-        break;
-    }
+    free(expr);
 }
 
 void expr_print_string(Expr *expr)

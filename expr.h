@@ -60,7 +60,7 @@ typedef struct
 struct Expr
 {
     ExprType type;
-    union expr
+    union
     {
         ExprLiteral literal;
         ExprVariable variable;
@@ -71,8 +71,6 @@ struct Expr
         ExprError error;
     } as;
 };
-
-#define EXPR_ERROR ((Expr){.type = EXPR_TYPE_ERROR, .as.error = {0}})
 
 void expr_free(Expr *expr);
 void expr_print_string(Expr *expr);

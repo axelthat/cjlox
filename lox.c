@@ -19,9 +19,7 @@ void lox_run(const char *filename)
         .tokens = scanner.tokens,
     };
     parser_init(&parser);
-    Expr expr = parser_parse(&parser);
-
-    // printf("%s", expr.type == EXPR_TYPE_UNARY ? "true" : "false");
+    Expr *expr = parser_parse(&parser);
 
     if (parser.had_error)
     {
@@ -29,16 +27,15 @@ void lox_run(const char *filename)
     }
     else
     {
-        expr_print_string(&expr);
+        expr_print_string(expr);
     }
 
     for (size_t i = 0; i < scanner.tokens_count; ++i)
     {
         Token token = scanner.tokens[i];
-        // token_print_string(&token);
         token_free(&token);
     }
 
-    expr_free(&expr);
+    expr_free(expr);
     free(c);
 }
