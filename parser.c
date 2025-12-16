@@ -306,7 +306,7 @@ static Expr *parser_unary(Parser *parser)
         *result = (Expr){
             .type = EXPR_TYPE_UNARY,
             .as.unary = {
-                .token = operator,
+                .operator = operator,
                 .expr = expr,
             },
         };
@@ -327,8 +327,10 @@ static Expr *parser_primary(Parser *parser)
         *expr = (Expr){
             .type = EXPR_TYPE_LITERAL,
             .as.literal = {
-                .literal_type = LITERAL_BOOL,
-                .literal.b_value = false,
+                .literal = {
+                    .type = LITERAL_BOOL,
+                    .value.b = false,
+                },
             },
         };
     }
@@ -338,8 +340,10 @@ static Expr *parser_primary(Parser *parser)
         *expr = (Expr){
             .type = EXPR_TYPE_LITERAL,
             .as.literal = {
-                .literal_type = LITERAL_BOOL,
-                .literal.b_value = true,
+                .literal = {
+                    .type = LITERAL_BOOL,
+                    .value.b = true,
+                },
             },
         };
     }
@@ -349,8 +353,11 @@ static Expr *parser_primary(Parser *parser)
         *expr = (Expr){
             .type = EXPR_TYPE_LITERAL,
             .as.literal = {
-                .literal_type = LITERAL_STRING,
-                .literal.s_value = NULL,
+                .literal = {
+                    .type = LITERAL_STRING,
+                    .value.s = NULL,
+                    .is_owned = false,
+                },
             },
         };
     }
@@ -360,7 +367,6 @@ static Expr *parser_primary(Parser *parser)
         *expr = (Expr){
             .type = EXPR_TYPE_LITERAL,
             .as.literal = {
-                .literal_type = LITERAL_STRING,
                 .literal = parser_previous(parser)->literal,
             },
         };
@@ -371,7 +377,6 @@ static Expr *parser_primary(Parser *parser)
         *expr = (Expr){
             .type = EXPR_TYPE_LITERAL,
             .as.literal = {
-                .literal_type = LITERAL_NUMBER,
                 .literal = parser_previous(parser)->literal,
             },
         };

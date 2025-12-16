@@ -6,7 +6,7 @@
 #include "token.h"
 
 static void scanner_get_token(Scanner *scanner);
-static void scanner_add_token(Scanner *scanner, enum TokenType token_type, LiteralType literal_type, Literal literal);
+static void scanner_add_token(Scanner *scanner, enum TokenType token_type, Literal literal);
 static char scanner_peek(Scanner *scanner);
 static char scanner_peek_next(Scanner *scanner);
 static char scanner_match(Scanner *scanner, char c);
@@ -37,7 +37,7 @@ void scanner_tokens(Scanner *scanner)
         scanner->start = scanner->current;
     }
 
-    scanner_add_token(scanner, TOKEN_TYPE_EOF, LITERAL_NONE, (Literal){0});
+    scanner_add_token(scanner, TOKEN_TYPE_EOF, (Literal){.type = LITERAL_NONE, .value = {0}});
 }
 
 static void scanner_get_token(Scanner *scanner)
@@ -47,49 +47,49 @@ static void scanner_get_token(Scanner *scanner)
     switch (c)
     {
     case '(':
-        scanner_add_token(scanner, TOKEN_TYPE_LEFT_PAREN, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_LEFT_PAREN, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case ')':
-        scanner_add_token(scanner, TOKEN_TYPE_RIGHT_PAREN, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_RIGHT_PAREN, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '{':
-        scanner_add_token(scanner, TOKEN_TYPE_LEFT_BRACE, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_LEFT_BRACE, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '}':
-        scanner_add_token(scanner, TOKEN_TYPE_RIGHT_BRACE, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_RIGHT_BRACE, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case ',':
-        scanner_add_token(scanner, TOKEN_TYPE_COMMA, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_COMMA, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '.':
-        scanner_add_token(scanner, TOKEN_TYPE_DOT, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_DOT, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '-':
-        scanner_add_token(scanner, TOKEN_TYPE_MINUS, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_MINUS, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '+':
-        scanner_add_token(scanner, TOKEN_TYPE_PLUS, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_PLUS, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case ';':
-        scanner_add_token(scanner, TOKEN_TYPE_SEMICOLON, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_SEMICOLON, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '*':
-        scanner_add_token(scanner, TOKEN_TYPE_STAR, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_STAR, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '!':
-        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_BANG_EQUAL : TOKEN_TYPE_BANG, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_BANG_EQUAL : TOKEN_TYPE_BANG, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '=':
-        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_EQUAL_EQUAL : TOKEN_TYPE_EQUAL, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_EQUAL_EQUAL : TOKEN_TYPE_EQUAL, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '<':
-        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_LESS_EQUAL : TOKEN_TYPE_LESS, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_LESS_EQUAL : TOKEN_TYPE_LESS, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '>':
-        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_GREATER_EQUAL : TOKEN_TYPE_GREATER, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, scanner_match(scanner, '=') ? TOKEN_TYPE_GREATER_EQUAL : TOKEN_TYPE_GREATER, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '/':
-        scanner_add_token(scanner, TOKEN_TYPE_SLASH, LITERAL_NONE, (Literal){0});
+        scanner_add_token(scanner, TOKEN_TYPE_SLASH, (Literal){.type = LITERAL_NONE, .value = {0}});
         break;
     case '"':
         scanner_string(scanner);
@@ -120,12 +120,11 @@ static void scanner_get_token(Scanner *scanner)
     }
 }
 
-static void scanner_add_token(Scanner *scanner, enum TokenType token_type, LiteralType literal_type, Literal literal)
+static void scanner_add_token(Scanner *scanner, enum TokenType token_type, Literal literal)
 {
     scanner->tokens[scanner->tokens_count++] = (Token){
         .lexeme = substring(scanner->source, scanner->start, scanner->current),
         .literal = literal,
-        .literal_type = literal_type,
         .type = token_type,
     };
 }
@@ -270,7 +269,7 @@ static void scanner_string(Scanner *scanner)
 
     char *value = substring(scanner->source, scanner->start + 1, scanner->current - 1);
 
-    scanner_add_token(scanner, TOKEN_TYPE_STRING, LITERAL_STRING, (Literal){.s_value = value});
+    scanner_add_token(scanner, TOKEN_TYPE_STRING, (Literal){.type = LITERAL_STRING, .value.s = value});
 }
 
 static void scanner_number(Scanner *scanner)
@@ -296,7 +295,7 @@ static void scanner_number(Scanner *scanner)
 
     free(lexeme);
 
-    scanner_add_token(scanner, TOKEN_TYPE_NUMBER, LITERAL_NUMBER, (Literal){.i_value = value});
+    scanner_add_token(scanner, TOKEN_TYPE_NUMBER, (Literal){.type = LITERAL_NUMBER, .value.i = value});
 }
 
 static void scanner_identifier(Scanner *scanner)
@@ -313,5 +312,9 @@ static void scanner_identifier(Scanner *scanner)
         token_type = TOKEN_TYPE_IDENTIFIER;
     }
 
-    scanner_add_token(scanner, token_type, LITERAL_STRING, (Literal){.s_value = value});
+    scanner_add_token(scanner, token_type, (Literal){
+                                               .type = LITERAL_STRING,
+                                               .value.s = value,
+                                               .is_owned = false,
+                                           });
 }

@@ -39,16 +39,16 @@ void expr_print_string(Expr *expr)
     {
     case EXPR_TYPE_LITERAL:
     {
-        switch (expr->as.literal.literal_type)
+        switch (expr->as.literal.literal.type)
         {
         case LITERAL_STRING:
-            fprintf(stdout, "%s", expr->as.literal.literal.s_value);
+            fprintf(stdout, "%s", expr->as.literal.literal.value.s);
             break;
         case LITERAL_NUMBER:
-            fprintf(stdout, "%f", expr->as.literal.literal.i_value);
+            fprintf(stdout, "%f", expr->as.literal.literal.value.i);
             break;
         case LITERAL_BOOL:
-            fprintf(stdout, "%s", expr->as.literal.literal.b_value ? "true" : "false");
+            fprintf(stdout, "%s", expr->as.literal.literal.value.b ? "true" : "false");
             break;
         default:
             break;
@@ -59,7 +59,7 @@ void expr_print_string(Expr *expr)
         expr_print_string(expr->as.grouping.expr);
         break;
     case EXPR_TYPE_UNARY:
-        fprintf(stdout, "%s", token_type_get_name(&expr->as.unary.token->type));
+        fprintf(stdout, "%s", token_type_get_name(&expr->as.unary.operator->type));
         expr_print_string(expr->as.unary.expr);
         break;
     case EXPR_TYPE_BINARY:

@@ -18,7 +18,6 @@ typedef enum
 
 typedef struct
 {
-    LiteralType literal_type;
     Literal literal;
 } ExprLiteral;
 
@@ -34,7 +33,7 @@ typedef struct
 
 typedef struct
 {
-    Token *token;
+    Token *operator;
     Expr *expr;
 } ExprUnary;
 

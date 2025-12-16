@@ -12,18 +12,22 @@ typedef enum
     LITERAL_NONE
 } LiteralType;
 
-typedef union
+typedef struct
 {
-    char *s_value;
-    double i_value;
-    bool b_value;
+    LiteralType type;
+    union
+    {
+        char *s;
+        double i;
+        bool b;
+    } value;
+    bool is_owned;
 } Literal;
 
 typedef struct
 {
     enum TokenType type;
     char *lexeme;
-    LiteralType literal_type;
     Literal literal;
 } Token;
 
