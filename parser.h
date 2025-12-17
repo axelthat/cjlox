@@ -3,6 +3,7 @@
 
 #include "token.h"
 #include "expr.h"
+#include "stmt.h"
 #include <stdlib.h>
 
 typedef struct
@@ -13,6 +14,6 @@ typedef struct
 } Parser;
 
 void parser_init(Parser *parser);
-Expr *parser_parse(Parser *parser);
+Statements parser_parse(Parser *parser);
 
 #endif

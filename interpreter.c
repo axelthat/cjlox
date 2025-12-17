@@ -2,19 +2,68 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "environment.h"
 
+static void interpreter_execute(Stmt *stmt);
 static Literal interpreter_evaluate(Expr *expr);
 static bool interpreter_is_truthy(Literal literal);
 static bool interpreter_is_equal(Literal left, Literal right);
+static void interpreter_visit_block_stmt(StmtBlock *stmt);
+static void interpreter_execute_block(Statements *statements);
+static void interpreter_visit_expression_stmt(StmtExpr *stmt);
+static void interpreter_visit_if_stmt(StmtIf *stmt);
+static void interpreter_visit_print_stmt(StmtPrint *stmt);
+static void interpreter_visit_while_stmt(StmtWhile *stmt);
+static void interpreter_visit_var_stmt(StmtVar *stmt);
 static Literal interpreter_visit_literal_expr(ExprLiteral *expr);
+static Literal interpreter_visit_assign_expr(ExprAssign *expr);
+static Literal interpreter_visit_var_expr(ExprVariable *expr);
 static Literal interpreter_visit_grouping_expr(ExprGrouping *expr);
 static Literal interpreter_visit_unary_expr(ExprUnary *expr);
 static Literal interpreter_visit_binary_expr(ExprBinary *expr);
 static Literal interpreter_visit_logical_expr(ExprLogical *expr);
 
-Literal intepreter_interpret(Interpreter *interpreter)
+static Environment environment = (Environment){
+    .entries = {
+        .count = 0,
+        .value = {},
+    },
+};
+
+void intepreter_interpret(Interpreter *interpreter)
 {
-    return interpreter_evaluate(interpreter->expr);
+    for (size_t i = 0; i < interpreter->statements.count; ++i)
+    {
+        Stmt *stmt = interpreter->statements.value[i];
+        interpreter_execute(stmt);
+    }
+}
+
+static void interpreter_execute(Stmt *stmt)
+{
+    switch (stmt->type)
+    {
+    case STMT_TYPE_BLOCK:
+        interpreter_visit_block_stmt(&stmt->as.block);
+        break;
+    case STMT_TYPE_EXPRESSION:
+        interpreter_visit_expression_stmt(&stmt->as.expr);
+        break;
+    case STMT_TYPE_IF:
+        interpreter_visit_if_stmt(&stmt->as.iff);
+        break;
+    case STMT_TYPE_PRINT:
+        interpreter_visit_print_stmt(&stmt->as.print);
+        break;
+    case STMT_TYPE_WHILE:
+        interpreter_visit_while_stmt(&stmt->as.whilee);
+        break;
+    case STMT_TYPE_VAR:
+        interpreter_visit_var_stmt(&stmt->as.var);
+        break;
+    default:
+        break;
+    }
 }
 
 static Literal interpreter_evaluate(Expr *expr)
@@ -31,6 +80,10 @@ static Literal interpreter_evaluate(Expr *expr)
         return interpreter_visit_binary_expr(&expr->as.binary);
     case EXPR_TYPE_LOGICAL:
         return interpreter_visit_logical_expr(&expr->as.logical);
+    case EXPR_TYPE_ASSIGN:
+        return interpreter_visit_assign_expr(&expr->as.assign);
+    case EXPR_TYPE_VARIABLE:
+        return interpreter_visit_var_expr(&expr->as.variable);
     default:
         break;
     }
@@ -85,9 +138,87 @@ static bool interpreter_is_equal(Literal left, Literal right)
     return false;
 }
 
+static void interpreter_visit_block_stmt(StmtBlock *stmt)
+{
+    interpreter_execute_block(&stmt->statements);
+}
+
+static void interpreter_execute_block(Statements *statements)
+{
+    for (size_t i = 0; i < statements->count; ++i)
+    {
+        interpreter_execute(statements->value[i]);
+    }
+}
+
+static void interpreter_visit_expression_stmt(StmtExpr *stmt)
+{
+    interpreter_evaluate(stmt->expr);
+}
+
+static void interpreter_visit_if_stmt(StmtIf *stmt)
+{
+    if (interpreter_is_truthy(interpreter_evaluate(stmt->condition)))
+    {
+        interpreter_execute(stmt->then_branch);
+    }
+    else if (stmt->else_branch != NULL)
+    {
+        interpreter_execute(stmt->else_branch);
+    }
+}
+
+static void interpreter_visit_print_stmt(StmtPrint *stmt)
+{
+    Literal literal = interpreter_evaluate(stmt->value);
+    switch (literal.type)
+    {
+    case LITERAL_STRING:
+        fprintf(stdout, "%s\n", literal.value.s);
+        break;
+    case LITERAL_NUMBER:
+        fprintf(stdout, "%f\n", literal.value.i);
+        break;
+    case LITERAL_BOOL:
+        fprintf(stdout, "%s\n", literal.value.b ? "true" : "false");
+        break;
+    default:
+        break;
+    }
+}
+
+static void interpreter_visit_while_stmt(StmtWhile *stmt)
+{
+    while (interpreter_is_truthy(interpreter_evaluate(stmt->condition)))
+    {
+        interpreter_execute(stmt->body);
+    }
+}
+
+static void interpreter_visit_var_stmt(StmtVar *stmt)
+{
+    if (stmt->initializer != NULL)
+    {
+        Literal value = interpreter_evaluate(stmt->initializer);
+        environment_define(&environment, stmt->name->lexeme, value);
+    }
+}
+
 static Literal interpreter_visit_literal_expr(ExprLiteral *expr)
 {
     return expr->literal;
+}
+
+static Literal interpreter_visit_assign_expr(ExprAssign *expr)
+{
+    Literal value = interpreter_evaluate(expr->value);
+    environment_assign(&environment, expr->name->lexeme, value);
+    return value;
+}
+
+static Literal interpreter_visit_var_expr(ExprVariable *expr)
+{
+    return *environment_get(&environment, expr->name->lexeme);
 }
 
 static Literal interpreter_visit_grouping_expr(ExprGrouping *expr)

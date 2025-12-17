@@ -2,13 +2,14 @@
 #define INTERPRETER_H
 
 #include "expr.h"
+#include "stmt.h"
 
 typedef struct
 {
-    Expr *expr;
+    Statements statements;
 } Interpreter;
 
-Literal intepreter_interpret(Interpreter *interpreter);
+void intepreter_interpret(Interpreter *interpreter);
 void intepreter_free(Literal *literal);
 
 #endif
