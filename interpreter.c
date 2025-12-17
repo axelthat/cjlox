@@ -9,7 +9,7 @@ static Literal interpreter_evaluate(Expr *expr);
 static bool interpreter_is_truthy(Literal literal);
 static bool interpreter_is_equal(Literal left, Literal right);
 static void interpreter_visit_block_stmt(StmtBlock *stmt);
-static void interpreter_execute_block(Statements *statements);
+static void interpreter_execute_block(Statements *statements, Environment *block_environment);
 static void interpreter_visit_expression_stmt(StmtExpr *stmt);
 static void interpreter_visit_if_stmt(StmtIf *stmt);
 static void interpreter_visit_print_stmt(StmtPrint *stmt);
@@ -24,11 +24,13 @@ static Literal interpreter_visit_binary_expr(ExprBinary *expr);
 static Literal interpreter_visit_logical_expr(ExprLogical *expr);
 
 static Environment environment = (Environment){
+    .enclosing = NULL,
     .entries = {
         .count = 0,
         .value = {},
     },
 };
+static Environment *environment_ptr = &environment;
 
 void intepreter_interpret(Interpreter *interpreter)
 {
@@ -140,15 +142,25 @@ static bool interpreter_is_equal(Literal left, Literal right)
 
 static void interpreter_visit_block_stmt(StmtBlock *stmt)
 {
-    interpreter_execute_block(&stmt->statements);
+    Environment block_environment = {
+        .enclosing = &environment,
+        .entries = {
+            .count = 0,
+            .value = {},
+        },
+    };
+    interpreter_execute_block(&stmt->statements, &block_environment);
 }
 
-static void interpreter_execute_block(Statements *statements)
+static void interpreter_execute_block(Statements *statements, Environment *block_environment)
 {
+    Environment *previous = environment_ptr;
+    environment_ptr = block_environment;
     for (size_t i = 0; i < statements->count; ++i)
     {
         interpreter_execute(statements->value[i]);
     }
+    environment_ptr = previous;
 }
 
 static void interpreter_visit_expression_stmt(StmtExpr *stmt)
@@ -200,7 +212,7 @@ static void interpreter_visit_var_stmt(StmtVar *stmt)
     if (stmt->initializer != NULL)
     {
         Literal value = interpreter_evaluate(stmt->initializer);
-        environment_define(&environment, stmt->name->lexeme, value);
+        environment_define(environment_ptr, stmt->name->lexeme, value);
     }
 }
 
@@ -212,13 +224,13 @@ static Literal interpreter_visit_literal_expr(ExprLiteral *expr)
 static Literal interpreter_visit_assign_expr(ExprAssign *expr)
 {
     Literal value = interpreter_evaluate(expr->value);
-    environment_assign(&environment, expr->name->lexeme, value);
+    environment_assign(environment_ptr, expr->name->lexeme, value);
     return value;
 }
 
 static Literal interpreter_visit_var_expr(ExprVariable *expr)
 {
-    return *environment_get(&environment, expr->name->lexeme);
+    return *environment_get(environment_ptr, expr->name->lexeme);
 }
 
 static Literal interpreter_visit_grouping_expr(ExprGrouping *expr)

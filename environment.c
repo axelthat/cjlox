@@ -11,6 +11,11 @@ Literal *environment_get(Environment *environment, char *key)
         }
     }
 
+    if (environment->enclosing != NULL)
+    {
+        return environment_get(environment->enclosing, key);
+    }
+
     return NULL;
 }
 
@@ -27,5 +32,12 @@ void environment_assign(Environment *environment, char *key, Literal value)
     if (entry != NULL)
     {
         *entry = value;
+        return;
+    }
+
+    if (environment->enclosing != NULL)
+    {
+        environment_assign(environment->enclosing, key, value);
+        return;
     }
 }

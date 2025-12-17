@@ -4,6 +4,8 @@
 #include "token.h"
 #include <stdlib.h>
 
+typedef struct Environment Environment;
+
 typedef struct
 {
     size_t count;
@@ -14,10 +16,11 @@ typedef struct
     } value[256];
 } Entries;
 
-typedef struct
+struct Environment
 {
     Entries entries;
-} Environment;
+    Environment *enclosing;
+};
 
 Literal *environment_get(Environment *environment, char *key);
 void environment_define(Environment *environment, char *key, Literal value);
