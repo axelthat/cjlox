@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 static bool parser_match(Parser *parser, enum TokenType token_type);
+static bool parser_check(Parser *parser, enum TokenType token_type);
 static bool parser_is_at_end(Parser *parser);
 static Token *parser_advance(Parser *parser);
 static Token *parser_consume(Parser *parser, enum TokenType token_type, const char *message);
@@ -15,6 +16,7 @@ static Stmt *parser_if_statement(Parser *parser);
 static Stmt *parser_print_statement(Parser *parser);
 static Stmt *parser_return_statement(Parser *parser);
 static Stmt *parser_while_statement(Parser *parser);
+static Stmt *parser_function(Parser *parser);
 static Statements parser_block(Parser *parser);
 static Stmt *parser_expression_statement(Parser *parser);
 static Expr *parser_expression(Parser *parser);
@@ -26,6 +28,8 @@ static Expr *parser_comparison(Parser *parser);
 static Expr *parser_term(Parser *parser);
 static Expr *parser_factor(Parser *parser);
 static Expr *parser_unary(Parser *parser);
+static Expr *parser_call(Parser *parser);
+static Expr *parser_finish_callee(Parser *parser, Expr *callee);
 static Expr *parser_primary(Parser *parser);
 
 void parser_init(Parser *parser)
@@ -64,6 +68,11 @@ static bool parser_match(Parser *parser, enum TokenType token_type)
     return false;
 }
 
+static bool parser_check(Parser *parser, enum TokenType token_type)
+{
+    return parser_peek(parser)->type == token_type;
+}
+
 static Token *parser_advance(Parser *parser)
 {
     if (!parser_is_at_end(parser))
@@ -75,7 +84,7 @@ static Token *parser_advance(Parser *parser)
 
 static Token *parser_consume(Parser *parser, enum TokenType token_type, const char *message)
 {
-    if (parser_peek(parser)->type == token_type)
+    if (parser_check(parser, token_type))
     {
         return parser_advance(parser);
     }
@@ -127,7 +136,11 @@ static Stmt *parser_declaration(Parser *parser)
 
 static Stmt *parser_statement(Parser *parser)
 {
-    if (parser_match(parser, TOKEN_TYPE_IF))
+    if (parser_match(parser, TOKEN_TYPE_FUN))
+    {
+        return parser_function(parser);
+    }
+    else if (parser_match(parser, TOKEN_TYPE_IF))
     {
         return parser_if_statement(parser);
     }
@@ -227,6 +240,40 @@ static Stmt *parser_while_statement(Parser *parser)
         .type = STMT_TYPE_WHILE,
         .as.whilee = {
             .condition = condition,
+            .body = body,
+        },
+    };
+    return stmt;
+}
+
+static Stmt *parser_function(Parser *parser)
+{
+    Token *name = parser_consume(parser, TOKEN_TYPE_IDENTIFIER, "Expect function name");
+    parser_consume(parser, TOKEN_TYPE_LEFT_PAREN, "Expect '(' after function name");
+
+    Token **tokens = malloc(256 * sizeof(Token *));
+    size_t i = 0;
+    if (!parser_check(parser, TOKEN_TYPE_RIGHT_PAREN))
+    {
+        do
+        {
+            tokens[i++] = parser_consume(parser, TOKEN_TYPE_IDENTIFIER, "Expect parameter name");
+        } while (parser_match(parser, TOKEN_TYPE_COMMA));
+    }
+
+    parser_consume(parser, TOKEN_TYPE_RIGHT_PAREN, "Expect ')' after parameters");
+    parser_consume(parser, TOKEN_TYPE_LEFT_BRACE, "Expect '{' before body");
+    Statements body = parser_block(parser);
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    *stmt = (Stmt){
+        .type = STMT_TYPE_FUNCTION,
+        .as.function = {
+            .name = name,
+            .params = {
+                .count = i,
+                .value = tokens,
+            },
             .body = body,
         },
     };
@@ -525,7 +572,55 @@ static Expr *parser_unary(Parser *parser)
         return result;
     }
 
-    return parser_primary(parser);
+    return parser_call(parser);
+}
+
+static Expr *parser_call(Parser *parser)
+{
+    Expr *expr = parser_primary(parser);
+
+    while (true)
+    {
+        if (parser_match(parser, TOKEN_TYPE_LEFT_PAREN))
+        {
+            expr = parser_finish_callee(parser, expr);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return expr;
+}
+
+static Expr *parser_finish_callee(Parser *parser, Expr *callee)
+{
+    Expr **expressions = malloc(256 * sizeof(Expr *));
+    size_t i = 0;
+    if (!parser_check(parser, TOKEN_TYPE_RIGHT_PAREN))
+    {
+        do
+        {
+            expressions[i++] = parser_expression(parser);
+        } while (parser_match(parser, TOKEN_TYPE_COMMA));
+    }
+
+    Token *paren = parser_consume(parser, TOKEN_TYPE_RIGHT_PAREN, "Expect ')' after arguments.");
+
+    Expr *expr = malloc(sizeof(Expr));
+    *expr = (Expr){
+        .type = EXPR_TYPE_CALL,
+        .as.call = {
+            .callee = callee,
+            .arguments = {
+                .count = i,
+                .value = expressions,
+            },
+            .paren = paren,
+        },
+    };
+    return expr;
 }
 
 static Expr *parser_primary(Parser *parser)

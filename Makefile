@@ -1,6 +1,6 @@
 CC := clang
 CFLAGS := -Wall -Wextra
-SOURCES := main.c lox.c util.c scanner.c token.c token_type.c parser.c expr.c interpreter.c environment.c
+SOURCES := main.c lox.c util.c scanner.c token.c token_type.c parser.c expr.c interpreter.c environment.c lox_function.c
 OBJECTS := $(SOURCES:.c=.o)
 DEPS := $(OBJECTS:.o=.d)
 TARGET := lox

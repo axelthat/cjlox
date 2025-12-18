@@ -30,7 +30,9 @@ void lox_run(const char *filename)
 
     Interpreter interpreter = {
         .statements = statements,
+        .environment_ptr = NULL,
     };
+    intepreter_init(&interpreter);
     intepreter_interpret(&interpreter);
 
     // for (size_t i = 0; i < scanner.tokens_count; ++i)

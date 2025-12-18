@@ -2,6 +2,7 @@
 #define STMT_H
 
 #include <stdlib.h>
+#include "expr.h"
 
 typedef struct Stmt Stmt;
 
@@ -63,6 +64,13 @@ typedef struct
     Expr *initializer;
 } StmtVar;
 
+struct StmtFunction
+{
+    Token *name;
+    Tokens params;
+    Statements body;
+};
+
 struct Stmt
 {
     StmtType type;
@@ -75,6 +83,7 @@ struct Stmt
         StmtBlock block;
         StmtExpr expr;
         StmtVar var;
+        StmtFunction function;
     } as;
 };
 

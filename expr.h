@@ -5,12 +5,19 @@
 
 typedef struct Expr Expr;
 
+typedef struct
+{
+    size_t count;
+    Expr **value;
+} Expressions;
+
 typedef enum
 {
     EXPR_TYPE_LITERAL,
     EXPR_TYPE_VARIABLE,
     EXPR_TYPE_GROUPING,
     EXPR_TYPE_UNARY,
+    EXPR_TYPE_CALL,
     EXPR_TYPE_BINARY,
     EXPR_TYPE_LOGICAL,
     EXPR_TYPE_ASSIGN,
@@ -63,6 +70,13 @@ typedef struct
     char value;
 } ExprError;
 
+typedef struct
+{
+    Expr *callee;
+    Token *paren;
+    Expressions arguments;
+} ExprCall;
+
 struct Expr
 {
     ExprType type;
@@ -75,6 +89,7 @@ struct Expr
         ExprBinary binary;
         ExprLogical logical;
         ExprAssign assign;
+        ExprCall call;
         ExprError error;
     } as;
 };

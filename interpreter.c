@@ -3,18 +3,20 @@
 #include <string.h>
 #include <stdio.h>
 #include "environment.h"
+#include "lox_function.h"
 
-static void interpreter_execute(Stmt *stmt);
+static InterpreterResult interpreter_execute(Stmt *stmt);
 static Literal interpreter_evaluate(Expr *expr);
 static bool interpreter_is_truthy(Literal literal);
 static bool interpreter_is_equal(Literal left, Literal right);
-static void interpreter_visit_block_stmt(StmtBlock *stmt);
-static void interpreter_execute_block(Statements *statements, Environment *block_environment);
-static void interpreter_visit_expression_stmt(StmtExpr *stmt);
-static void interpreter_visit_if_stmt(StmtIf *stmt);
-static void interpreter_visit_print_stmt(StmtPrint *stmt);
-static void interpreter_visit_while_stmt(StmtWhile *stmt);
-static void interpreter_visit_var_stmt(StmtVar *stmt);
+static InterpreterResult interpreter_visit_block_stmt(StmtBlock *stmt);
+static InterpreterResult interpreter_visit_function_stmt(StmtFunction *stmt);
+static InterpreterResult interpreter_visit_return_stmt(StmtReturn *stmt);
+static InterpreterResult interpreter_visit_expression_stmt(StmtExpr *stmt);
+static InterpreterResult interpreter_visit_if_stmt(StmtIf *stmt);
+static InterpreterResult interpreter_visit_print_stmt(StmtPrint *stmt);
+static InterpreterResult interpreter_visit_while_stmt(StmtWhile *stmt);
+static InterpreterResult interpreter_visit_var_stmt(StmtVar *stmt);
 static Literal interpreter_visit_literal_expr(ExprLiteral *expr);
 static Literal interpreter_visit_assign_expr(ExprAssign *expr);
 static Literal interpreter_visit_var_expr(ExprVariable *expr);
@@ -22,6 +24,7 @@ static Literal interpreter_visit_grouping_expr(ExprGrouping *expr);
 static Literal interpreter_visit_unary_expr(ExprUnary *expr);
 static Literal interpreter_visit_binary_expr(ExprBinary *expr);
 static Literal interpreter_visit_logical_expr(ExprLogical *expr);
+static Literal interpreter_visit_call_expr(ExprCall *expr);
 
 static Environment environment = (Environment){
     .enclosing = NULL,
@@ -32,6 +35,11 @@ static Environment environment = (Environment){
 };
 static Environment *environment_ptr = &environment;
 
+void intepreter_init(Interpreter *interpreter)
+{
+    interpreter->environment_ptr = environment_ptr;
+}
+
 void intepreter_interpret(Interpreter *interpreter)
 {
     for (size_t i = 0; i < interpreter->statements.count; ++i)
@@ -41,31 +49,37 @@ void intepreter_interpret(Interpreter *interpreter)
     }
 }
 
-static void interpreter_execute(Stmt *stmt)
+static InterpreterResult interpreter_execute(Stmt *stmt)
 {
     switch (stmt->type)
     {
+    case STMT_TYPE_FUNCTION:
+        return interpreter_visit_function_stmt(&stmt->as.function);
     case STMT_TYPE_BLOCK:
-        interpreter_visit_block_stmt(&stmt->as.block);
-        break;
+        return interpreter_visit_block_stmt(&stmt->as.block);
     case STMT_TYPE_EXPRESSION:
-        interpreter_visit_expression_stmt(&stmt->as.expr);
-        break;
+        return interpreter_visit_expression_stmt(&stmt->as.expr);
     case STMT_TYPE_IF:
-        interpreter_visit_if_stmt(&stmt->as.iff);
-        break;
+        return interpreter_visit_if_stmt(&stmt->as.iff);
     case STMT_TYPE_PRINT:
-        interpreter_visit_print_stmt(&stmt->as.print);
-        break;
+        return interpreter_visit_print_stmt(&stmt->as.print);
     case STMT_TYPE_WHILE:
-        interpreter_visit_while_stmt(&stmt->as.whilee);
-        break;
+        return interpreter_visit_while_stmt(&stmt->as.whilee);
     case STMT_TYPE_VAR:
-        interpreter_visit_var_stmt(&stmt->as.var);
-        break;
+        return interpreter_visit_var_stmt(&stmt->as.var);
+    case STMT_TYPE_RETURN:
+        return interpreter_visit_return_stmt(&stmt->as.returnn);
     default:
         break;
     }
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
 static Literal interpreter_evaluate(Expr *expr)
@@ -86,6 +100,8 @@ static Literal interpreter_evaluate(Expr *expr)
         return interpreter_visit_assign_expr(&expr->as.assign);
     case EXPR_TYPE_VARIABLE:
         return interpreter_visit_var_expr(&expr->as.variable);
+    case EXPR_TYPE_CALL:
+        return interpreter_visit_call_expr(&expr->as.call);
     default:
         break;
     }
@@ -140,35 +156,95 @@ static bool interpreter_is_equal(Literal left, Literal right)
     return false;
 }
 
-static void interpreter_visit_block_stmt(StmtBlock *stmt)
+static InterpreterResult interpreter_visit_block_stmt(StmtBlock *stmt)
 {
     Environment block_environment = {
-        .enclosing = &environment,
+        .enclosing = environment_ptr,
         .entries = {
             .count = 0,
             .value = {},
         },
     };
-    interpreter_execute_block(&stmt->statements, &block_environment);
+    return interpreter_execute_block(&stmt->statements, &block_environment);
 }
 
-static void interpreter_execute_block(Statements *statements, Environment *block_environment)
+InterpreterResult interpreter_execute_block(Statements *statements, Environment *block_environment)
 {
     Environment *previous = environment_ptr;
     environment_ptr = block_environment;
     for (size_t i = 0; i < statements->count; ++i)
     {
-        interpreter_execute(statements->value[i]);
+        InterpreterResult result = interpreter_execute(statements->value[i]);
+        if (result.type == INTERPRETER_RESULT_TYPE_RETURN)
+        {
+            return result;
+        }
     }
     environment_ptr = previous;
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
-static void interpreter_visit_expression_stmt(StmtExpr *stmt)
+static InterpreterResult interpreter_visit_function_stmt(StmtFunction *stmt)
+{
+    environment_define(
+        environment_ptr,
+        stmt->name->lexeme,
+        (Literal){
+            .type = LITERAL_FUNCTION,
+            .value.f = {
+                .f = lox_function_call,
+                .stmt = stmt,
+            },
+        });
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
+}
+
+static InterpreterResult interpreter_visit_return_stmt(StmtReturn *stmt)
+{
+    if (stmt->value != NULL)
+    {
+        return (InterpreterResult){
+            .type = INTERPRETER_RESULT_TYPE_RETURN,
+            .value = interpreter_evaluate(stmt->value),
+        };
+    }
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
+}
+
+static InterpreterResult interpreter_visit_expression_stmt(StmtExpr *stmt)
 {
     interpreter_evaluate(stmt->expr);
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
-static void interpreter_visit_if_stmt(StmtIf *stmt)
+static InterpreterResult interpreter_visit_if_stmt(StmtIf *stmt)
 {
     if (interpreter_is_truthy(interpreter_evaluate(stmt->condition)))
     {
@@ -178,9 +254,17 @@ static void interpreter_visit_if_stmt(StmtIf *stmt)
     {
         interpreter_execute(stmt->else_branch);
     }
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
-static void interpreter_visit_print_stmt(StmtPrint *stmt)
+static InterpreterResult interpreter_visit_print_stmt(StmtPrint *stmt)
 {
     Literal literal = interpreter_evaluate(stmt->value);
     switch (literal.type)
@@ -197,23 +281,51 @@ static void interpreter_visit_print_stmt(StmtPrint *stmt)
     default:
         break;
     }
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
-static void interpreter_visit_while_stmt(StmtWhile *stmt)
+static InterpreterResult interpreter_visit_while_stmt(StmtWhile *stmt)
 {
     while (interpreter_is_truthy(interpreter_evaluate(stmt->condition)))
     {
-        interpreter_execute(stmt->body);
+        InterpreterResult result = interpreter_execute(stmt->body);
+        if (result.type == INTERPRETER_RESULT_TYPE_RETURN)
+        {
+            return result;
+        }
     }
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
-static void interpreter_visit_var_stmt(StmtVar *stmt)
+static InterpreterResult interpreter_visit_var_stmt(StmtVar *stmt)
 {
     if (stmt->initializer != NULL)
     {
         Literal value = interpreter_evaluate(stmt->initializer);
         environment_define(environment_ptr, stmt->name->lexeme, value);
     }
+
+    return (InterpreterResult){
+        .type = INTERPRETER_RESULT_TYPE_NONE,
+        .value = {
+            .type = LITERAL_NONE,
+            .value.s = NULL,
+        },
+    };
 }
 
 static Literal interpreter_visit_literal_expr(ExprLiteral *expr)
@@ -376,6 +488,26 @@ static Literal interpreter_visit_logical_expr(ExprLogical *expr)
     }
 
     return interpreter_evaluate(expr->right);
+}
+
+static Literal interpreter_visit_call_expr(ExprCall *expr)
+{
+    Literal callee = interpreter_evaluate(expr->callee);
+
+    Literal *literals = malloc(256 * sizeof(Literal));
+    for (size_t i = 0; i < expr->arguments.count; ++i)
+    {
+        literals[i] = interpreter_evaluate(expr->arguments.value[i]);
+    }
+
+    LoxCallableFn function = callee.value.f.f;
+    return function(
+        environment_ptr,
+        callee.value.f.stmt,
+        (Literals){
+            .count = expr->arguments.count,
+            .value = literals,
+        });
 }
 
 void intepreter_free(Literal *literal)
